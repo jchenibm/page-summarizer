@@ -1,3 +1,10 @@
+// 添加常量定义在文件开头
+const CARD_WIDTH = 600;  // 卡片宽度
+const BORDER_PADDING = 20;  // 边框内边距
+const FOOTER_HEIGHT = 60;  // 页脚高度
+const EXTRA_SPACE = 40;  // 额外空间
+const DPI_SCALE = 2;  // DPI缩放比例，用于提高图片清晰度
+
 document.addEventListener('DOMContentLoaded', async function() {
   const apiEndpointInput = document.getElementById('api-endpoint');
   const apiKeyInput = document.getElementById('api-key');
@@ -135,7 +142,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   generateCardBtn.addEventListener('click', function() {
+    console.log('Generate card button clicked'); // 添加调试日志
     const summaryHTML = document.getElementById('summary-text').innerHTML;
+    if (!summaryHTML) {
+      console.error('No summary content found');
+      return;
+    }
     generateKnowledgeCard(summaryHTML);
   });
 
@@ -286,18 +298,20 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 async function generateKnowledgeCard(html) {
+  console.log('Generating knowledge card...'); // 添加调试日志
+  
   // 创建一个临时容器来计算实际渲染高度
   const tempContainer = document.createElement('div');
   tempContainer.style.width = `${CARD_WIDTH - 40}px`; // CARD_WIDTH - 左右各20px padding
-  tempContainer.style.padding = '0px 20px'; // 减小上下padding
+  tempContainer.style.padding = '0px 20px';
   tempContainer.style.position = 'absolute';
   tempContainer.style.left = '-9999px';
   tempContainer.style.wordWrap = 'break-word';
   tempContainer.style.fontFamily = 'Roboto, Arial, sans-serif';
   document.body.appendChild(tempContainer);
 
-  // 使用marked渲染Markdown
-  tempContainer.innerHTML = marked.parse(html);
+  // 使用传入的HTML内容
+  tempContainer.innerHTML = html;
 
   // 应用基本样式
   const style = document.createElement('style');
