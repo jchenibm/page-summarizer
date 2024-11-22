@@ -1,9 +1,9 @@
-// 添加常量定义在文件开头
+// 1. 将常量移到文件最顶部，确保在全局作用域
 const CARD_WIDTH = 600;  // 卡片宽度
 const BORDER_PADDING = 20;  // 边框内边距
-const FOOTER_HEIGHT = 60;  // 页脚高度
-const EXTRA_SPACE = 40;  // 额外空间
-const DPI_SCALE = 2;  // DPI缩放比例，用于提高图片清晰度
+const FOOTER_HEIGHT = 80;  // 页脚高度
+const EXTRA_SPACE = 100;  // 额外空间
+const DPI_SCALE = 2;  // DPI缩放比例
 
 document.addEventListener('DOMContentLoaded', async function() {
   const apiEndpointInput = document.getElementById('api-endpoint');
@@ -270,20 +270,19 @@ function addRetryButton() {
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  // 处理中英文混合文本
-  const characters = text.split('');
+  const words = text.split('');
   let line = '';
   let currentY = y;
+  const actualLineHeight = lineHeight * 1.2; // 增加行间距
 
-  for (let i = 0; i < characters.length; i++) {
-    const char = characters[i];
-    const testLine = line + char;
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line + words[i];
     const metrics = ctx.measureText(testLine);
     
     if (metrics.width > maxWidth && line) {
       ctx.fillText(line, x, currentY);
-      line = char;
-      currentY += lineHeight;
+      line = words[i];
+      currentY += actualLineHeight; // 使用新的行高
     } else {
       line = testLine;
     }
@@ -291,49 +290,91 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
   
   if (line) {
     ctx.fillText(line, x, currentY);
-    currentY += lineHeight;
+    currentY += actualLineHeight; // 使用新的行高
   }
   
   return currentY;
 }
 
 async function generateKnowledgeCard(html) {
-  console.log('Generating knowledge card...'); // 添加调试日志
+  console.log('Generating knowledge card...'); 
   
-  // 创建一个临时容器来计算实际渲染高度
+  // 创建临时容器前先清理可能存在的旧容器
+  const oldContainer = document.getElementById('temp-card-container');
+  if (oldContainer) {
+    oldContainer.remove();
+  }
+  
+  // 创建临时容器并添加 ID
   const tempContainer = document.createElement('div');
-  tempContainer.style.width = `${CARD_WIDTH - 40}px`; // CARD_WIDTH - 左右各20px padding
-  tempContainer.style.padding = '0px 20px';
-  tempContainer.style.position = 'absolute';
-  tempContainer.style.left = '-9999px';
-  tempContainer.style.wordWrap = 'break-word';
-  tempContainer.style.fontFamily = 'Roboto, Arial, sans-serif';
+  tempContainer.id = 'temp-card-container'; // 添加 ID 便于查找
+  tempContainer.style.cssText = `
+    width: ${CARD_WIDTH - 40}px;
+    padding: 20px;
+    position: absolute;
+    left: -9999px;
+    word-wrap: break-word;
+    font-family: Roboto, Arial, sans-serif;
+    line-height: 1.6;
+  `;
   document.body.appendChild(tempContainer);
 
-  // 使用传入的HTML内容
+  // 添加内容和基本样式
   tempContainer.innerHTML = html;
-
-  // 应用基本样式
   const style = document.createElement('style');
   style.textContent = `
-    h2 { font-size: 24px; margin: 20px 0 10px 0; line-height: 1.3; }
-    h3 { font-size: 20px; margin: 15px 0 8px 0; line-height: 1.3; }
-    p { font-size: 16px; margin: 8px 0; line-height: 1.5; }
-    ul, ol { margin: 8px 0; padding-left: 20px; }
-    li { font-size: 16px; margin: 4px 0; line-height: 1.5; }
+    h2 { 
+      font-size: 24px; 
+      margin: 20px 0 16px 0; 
+      line-height: 1.4;
+    }
+    h3 { 
+      font-size: 20px; 
+      margin: 16px 0 12px 0; 
+      line-height: 1.4;
+    }
+    p { 
+      font-size: 16px; 
+      margin: 12px 0; 
+      line-height: 1.6;
+    }
+    ul, ol { 
+      margin: 12px 0; 
+      padding-left: 24px;
+    }
+    li { 
+      font-size: 16px; 
+      margin: 8px 0; 
+      line-height: 1.6;
+    }
   `;
   tempContainer.appendChild(style);
 
-  // 获取实际内容高度（加上额外的padding和水印区域）
-  const contentHeight = tempContainer.offsetHeight + FOOTER_HEIGHT + EXTRA_SPACE;
+  // 获取实际内容高度并添加额外空间
+  const contentHeight = tempContainer.offsetHeight;
+  
+  // 计算所有间距的总和
+  const spacingHeight = {
+    topPadding: 20,          // 顶部内边距
+    bottomPadding: 40,       // 底部内边距
+    elementSpacing: 16 * 5,  // 主要元素之间的间距
+    footerSpacing: 30,       // 页脚上方的间距
+    watermarkSpacing: 20     // 水印上下的间距
+  };
 
-  // 创建canvas
+  // 计算总高度，包含所有间距
+  const totalHeight = contentHeight + 
+                     FOOTER_HEIGHT + 
+                     EXTRA_SPACE + 
+                     Object.values(spacingHeight).reduce((a, b) => a + b, 0);
+
+  // 创建canvas并设置尺寸
   const canvas = document.createElement('canvas');
   canvas.width = (CARD_WIDTH + (BORDER_PADDING * 2)) * DPI_SCALE;
-  canvas.height = (contentHeight + (BORDER_PADDING * 2)) * DPI_SCALE;
+  canvas.height = (totalHeight + (BORDER_PADDING * 2)) * DPI_SCALE;
 
   const ctx = canvas.getContext('2d');
-  ctx.scale(DPI_SCALE, DPI_SCALE); // 缩放画布上下文
+  ctx.scale(DPI_SCALE, DPI_SCALE);
 
   // 设置文本渲染优化
   ctx.textBaseline = 'top';
@@ -343,8 +384,6 @@ async function generateKnowledgeCard(html) {
 
   // 绘制背景和阴影
   ctx.save();
-  
-  // 绘制阴影
   ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
   ctx.shadowBlur = 10;
   ctx.shadowOffsetX = 0;
@@ -367,76 +406,69 @@ async function generateKnowledgeCard(html) {
   // 填充白色背景
   ctx.fillStyle = '#ffffff';
   ctx.fill();
-
-  // 绘制边框
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = '#e5e7eb';
-  ctx.stroke();
-
   ctx.restore();
 
   // 绘制内容
-  let y = BORDER_PADDING + 12; // 考虑边框内边距
+  let y = BORDER_PADDING + 20;
 
-  // 递归处理DOM树
   function processNode(node, level = 0) {
     if (node.nodeType === Node.TEXT_NODE) {
       const text = node.textContent.trim();
       if (text) {
-        // 处理列表项的缩进和符号
         if (level > 0) {
           const bullet = '•';
-          const indent = level * 20;
+          const indent = level * 24;
           ctx.fillText(bullet, BORDER_PADDING + 20 + indent - 15, y);
-          y = wrapText(ctx, text, BORDER_PADDING + 20 + indent, y, CARD_WIDTH - 40 - indent, 24);
+          y = wrapText(ctx, text, BORDER_PADDING + 20 + indent, y, CARD_WIDTH - 60 - indent, 24);
         } else {
-          y = wrapText(ctx, text, BORDER_PADDING + 20, y, CARD_WIDTH - 40, 24);
+          y = wrapText(ctx, text, BORDER_PADDING + 20, y, CARD_WIDTH - 60, 24);
         }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
-      // 跳过style标签
       if (node.tagName === 'STYLE') return y;
 
-      // 设置字体式
+      // ���置不同元素的样式
       if (node.tagName === 'H2') {
-        ctx.font = '600 24px Roboto';
+        ctx.font = 'bold 24px Roboto';
         ctx.fillStyle = '#1f2937';
-        y += 30;
+        y += 24;
       } else if (node.tagName === 'H3') {
-        ctx.font = '500 20px Roboto';
+        ctx.font = '600 20px Roboto';
         ctx.fillStyle = '#374151';
-        y += 25;
+        y += 20;
       } else {
         ctx.font = '400 16px Roboto';
         ctx.fillStyle = '#4b5563';
         if (!['UL', 'OL'].includes(node.tagName)) {
-          y += 20;
+          y += 16;
         }
       }
 
-      // 如果是列表容器，只处理其子元素
       if (['UL', 'OL'].includes(node.tagName)) {
-        const listLevel = level + 1;
         Array.from(node.children).forEach(child => {
-          processNode(child, listLevel);
+          processNode(child, level + 1);
         });
       } else {
-        // 处理其他元素的所有子节点
         node.childNodes.forEach(child => {
           processNode(child, level);
         });
+      }
+
+      // 添加元素后的间距
+      if (['H2', 'H3', 'P', 'UL', 'OL'].includes(node.tagName)) {
+        y += 16;
       }
     }
     return y;
   }
 
-  // 开始处理内容
+  // 处理所有内容
   tempContainer.childNodes.forEach(node => {
     y = processNode(node);
   });
 
-  // 添加分隔线
-  const lineY = canvas.height / DPI_SCALE - BORDER_PADDING - 50;
+  // 调整分隔线位置
+  const lineY = canvas.height / DPI_SCALE - BORDER_PADDING - FOOTER_HEIGHT + 20;
   ctx.strokeStyle = '#e5e7eb';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -444,13 +476,17 @@ async function generateKnowledgeCard(html) {
   ctx.lineTo(canvas.width / DPI_SCALE - BORDER_PADDING - 20, lineY);
   ctx.stroke();
 
-  // 添加水印
+  // 调整水印位置
   ctx.font = '400 14px Roboto';
   ctx.fillStyle = '#9ca3af';
-  ctx.fillText('Generated by AI Summary Card Generator', BORDER_PADDING + 20, canvas.height / DPI_SCALE - BORDER_PADDING - 30);
+  ctx.fillText(
+    'Generated by AI Summary Card Generator', 
+    BORDER_PADDING + 20, 
+    canvas.height / DPI_SCALE - BORDER_PADDING - 40
+  );
 
-  // 清理临时元素
-  document.body.removeChild(tempContainer);
+  // 清理临时容器使用 remove() 方法
+  tempContainer.remove();
 
   // 转换为图片并下载
   try {
@@ -544,6 +580,8 @@ async function generateKnowledgeCard(html) {
     document.body.appendChild(modal);
 
   } catch (error) {
-    showError('Failed to generate knowledge card. Please try again.');
+    // 确保在出错时也清理临时容器
+    tempContainer.remove();
+    showError('Failed to generate knowledge card: ' + error.message);
   }
 }
