@@ -43,12 +43,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
 async function generateSummary(text) {
   try {
-    // Get API settings
-    const result = await chrome.storage.sync.get(['apiEndpoint', 'apiKey']);
+    // 获取所有配置，包括模型名称
+    const result = await chrome.storage.sync.get(['apiEndpoint', 'apiKey', 'modelName']);
     
     if (!result.apiEndpoint || !result.apiKey) {
       throw new Error('Please configure your API endpoint and key in the extension settings');
     }
+
+    // 使用配置的模型名称，默认为 gpt-4o-mini
+    const modelName = result.modelName || 'gpt-4o-mini';
 
     // Validate text length
     if (text.length < 10) {
@@ -86,7 +89,7 @@ async function generateSummary(text) {
         'Authorization': `Bearer ${result.apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: modelName,
         messages: [
           {
             role: 'system',

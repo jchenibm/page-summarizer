@@ -1,10 +1,3 @@
-// Constants for knowledge card dimensions
-const CARD_WIDTH = 500;
-const BORDER_PADDING = 8; // 边框的内边距
-const DPI_SCALE = 3; // 提高分辨率
-const FOOTER_HEIGHT = 80; // 分割线和水印的高度
-const EXTRA_SPACE = 100; // 额外的空间用于行间距和元素间距
-
 document.addEventListener('DOMContentLoaded', async function() {
   const apiEndpointInput = document.getElementById('api-endpoint');
   const apiKeyInput = document.getElementById('api-key');
@@ -13,8 +6,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   const settingsIcon = document.querySelector('.settings-icon');
   let saveTimeout;
 
+  const modelPresetSelect = document.getElementById('model-preset');
+  const customModelContainer = document.getElementById('custom-model-container');
+  const customModelInput = document.getElementById('custom-model-name');
+  
   // Load saved API settings
-  chrome.storage.sync.get(['apiEndpoint', 'apiKey', 'settingsOpen'], function(result) {
+  chrome.storage.sync.get(['apiEndpoint', 'apiKey', 'settingsOpen', 'modelName'], function(result) {
     apiEndpointInput.value = result.apiEndpoint || '';
     apiKeyInput.value = result.apiKey || '';
     
@@ -22,6 +19,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (result.settingsOpen) {
       settingsContent.classList.add('open');
       settingsIcon.classList.add('open');
+    }
+    
+    // 设置模型名称
+    if (result.modelName) {
+      // 检查是否是预设模型之一
+      const presetOption = Array.from(modelPresetSelect.options)
+        .find(option => option.value === result.modelName);
+      
+      if (presetOption) {
+        modelPresetSelect.value = result.modelName;
+      } else {
+        // 如果是自定义模型名称
+        modelPresetSelect.value = 'custom';
+        customModelInput.value = result.modelName;
+        customModelContainer.classList.remove('hidden');
+      }
     }
   });
 
@@ -159,6 +172,42 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
   });
+
+  // 处理模型选择变化
+  modelPresetSelect.addEventListener('change', function() {
+    if (this.value === 'custom') {
+      customModelContainer.classList.remove('hidden');
+      // 如果之前没有自定义值，聚焦输入框
+      if (!customModelInput.value) {
+        customModelInput.focus();
+      }
+    } else {
+      customModelContainer.classList.add('hidden');
+      // 保存预设模型名称
+      if (this.value) {
+        saveModelName(this.value);
+      }
+    }
+  });
+
+  // 处理自定义模型名称输入
+  customModelInput.addEventListener('input', function() {
+    if (this.value) {
+      saveModelName(this.value);
+    }
+  });
+
+  // 保存模型名称的函数
+  function saveModelName(modelName) {
+    clearTimeout(saveTimeout);
+    showSavingFeedback();
+    
+    saveTimeout = setTimeout(() => {
+      chrome.storage.sync.set({ modelName }, () => {
+        showSavedFeedback();
+      });
+    }, 500);
+  }
 });
 
 function showSavingFeedback() {
@@ -334,7 +383,7 @@ async function generateKnowledgeCard(html) {
       // 跳过style标签
       if (node.tagName === 'STYLE') return y;
 
-      // 设置字体样式
+      // 设置字体式
       if (node.tagName === 'H2') {
         ctx.font = '600 24px Roboto';
         ctx.fillStyle = '#1f2937';

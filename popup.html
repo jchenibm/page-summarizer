@@ -70,7 +70,7 @@
       transition: max-height 0.3s ease-out;
     }
     .settings-content.open {
-      max-height: 200px;
+      max-height: 400px;
     }
 
     /* 通用按钮样式 */
@@ -112,6 +112,31 @@
       width: 100%;
       margin-top: 8px;
     }
+
+    /* 添加新的过渡样式 */
+    .settings-section {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .settings-section.hidden {
+      opacity: 0;
+    }
+
+    /* 优化下拉框和输入框样式 */
+    select, input {
+      width: 100%;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background-color: white;
+    }
+
+    /* 添加间距 */
+    .settings-group {
+      margin-bottom: 16px;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -142,6 +167,30 @@
           <input type="password" id="api-key" 
             class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             placeholder="Enter your API key">
+        </div>
+        <div class="py-2">
+          <label class="block text-gray-700 text-sm font-bold mb-2">
+            Model Selection
+          </label>
+          
+          <!-- 预设模型下拉列表 -->
+          <select id="model-preset" class="shadow border rounded w-full py-2 px-3 text-gray-700 mb-2">
+            <option value="">-- Select a preset model --</option>
+            <option value="gpt-4">GPT-4</option>
+            <option value="gpt-4o-mini">GPT-4o-mini</option>
+            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+            <option value="glm-4-flash">GLM-4 Flash</option>
+            <option value="custom">Custom Model Name...</option>
+          </select>
+
+          <!-- 自定义模型输入框 -->
+          <div id="custom-model-container" class="hidden">
+            <input type="text" 
+              id="custom-model-name"
+              class="shadow border rounded w-full py-2 px-3 text-gray-700" 
+              placeholder="Enter custom model name">
+          </div>
         </div>
       </div>
     </div>
