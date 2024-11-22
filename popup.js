@@ -1,3 +1,10 @@
+// Constants for knowledge card dimensions
+const CARD_WIDTH = 500;
+const BORDER_PADDING = 8; // 边框的内边距
+const DPI_SCALE = 3; // 提高分辨率
+const FOOTER_HEIGHT = 80; // 分割线和水印的高度
+const EXTRA_SPACE = 100; // 额外的空间用于行间距和元素间距
+
 document.addEventListener('DOMContentLoaded', async function() {
   const apiEndpointInput = document.getElementById('api-endpoint');
   const apiKeyInput = document.getElementById('api-key');
@@ -232,7 +239,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 async function generateKnowledgeCard(html) {
   // 创建一个临时容器来计算实际渲染高度
   const tempContainer = document.createElement('div');
-  tempContainer.style.width = '360px'; // 400px - 左右各20px padding
+  tempContainer.style.width = `${CARD_WIDTH - 40}px`; // CARD_WIDTH - 左右各20px padding
   tempContainer.style.padding = '0px 20px'; // 减小上下padding
   tempContainer.style.position = 'absolute';
   tempContainer.style.left = '-9999px';
@@ -255,15 +262,11 @@ async function generateKnowledgeCard(html) {
   tempContainer.appendChild(style);
 
   // 获取实际内容高度（加上额外的padding和水印区域）
-  const FOOTER_HEIGHT = 80; // 分割线和水印的高度
-  const EXTRA_SPACE = 100; // 额外的空间用于行间距和元素间距
   const contentHeight = tempContainer.offsetHeight + FOOTER_HEIGHT + EXTRA_SPACE;
 
   // 创建canvas
-  const BORDER_PADDING = 8; // 边框的内边距
-  const DPI_SCALE = 3; // 提高分辨率
   const canvas = document.createElement('canvas');
-  canvas.width = (400 + (BORDER_PADDING * 2)) * DPI_SCALE;
+  canvas.width = (CARD_WIDTH + (BORDER_PADDING * 2)) * DPI_SCALE;
   canvas.height = (contentHeight + (BORDER_PADDING * 2)) * DPI_SCALE;
 
   const ctx = canvas.getContext('2d');
@@ -322,9 +325,9 @@ async function generateKnowledgeCard(html) {
           const bullet = '•';
           const indent = level * 20;
           ctx.fillText(bullet, BORDER_PADDING + 20 + indent - 15, y);
-          y = wrapText(ctx, text, BORDER_PADDING + 20 + indent, y, 360 - indent, 24);
+          y = wrapText(ctx, text, BORDER_PADDING + 20 + indent, y, CARD_WIDTH - 40 - indent, 24);
         } else {
-          y = wrapText(ctx, text, BORDER_PADDING + 20, y, 360, 24);
+          y = wrapText(ctx, text, BORDER_PADDING + 20, y, CARD_WIDTH - 40, 24);
         }
       }
     } else if (node.nodeType === Node.ELEMENT_NODE) {
