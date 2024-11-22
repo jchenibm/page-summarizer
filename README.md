@@ -10,3 +10,8 @@ Chrome 插件，一个简单高效的网页内容摘要工具。可以快速提�
 - 💻 一键快速拷贝摘要
 - 🔌 一键生成可分享的知识卡片
 
+## 截屏演示
+
+![配置](./images/settings.jpg)
+![摘要](./images/summary.jpg)
+![卡片](./images/card.jpg)
