@@ -12,11 +12,14 @@ Chrome 插件，一个简单高效的网页内容摘要工具。可以快速提�
 
 ## 截屏演示
 
-配置界面
+- 配置界面
+
 <img src="./images/settings.jpg" width="500" alt="配置">
 
-摘要
+- 摘要
+
 <img src="./images/summary.jpg" width="500" alt="摘要">
 
-卡片
+- 卡片
+
 <img src="./images/card.jpg" width="500" alt="卡片">
