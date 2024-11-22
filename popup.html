@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>AI Summary Card Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="lib/marked.min.js"></script>
+  <style>
+    body {
+      width: 400px;
+      padding: 16px;
+    }
+    .loading {
+      display: none;
+    }
+    .loading.active {
+      display: block;
+    }
+    .markdown-body {
+      padding: 16px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    .markdown-body ul {
+      list-style-type: disc;
+      padding-left: 2em;
+      margin-bottom: 1em;
+    }
+    .markdown-body li {
+      margin-bottom: 0.25em;
+      margin-left: 1.5em;
+      display: list-item;
+    }
+    .markdown-body h2 {
+      font-size: 1.4em;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid #eaecef;
+    }
+    .markdown-body h3 {
+      font-size: 1.2em;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+    .markdown-body p {
+      margin-bottom: 1em;
+    }
+    .markdown-body hr {
+      margin: 1em 0;
+      border: 0;
+      border-top: 1px solid #eaecef;
+    }
+    .markdown-body a {
+      color: #0366d6;
+      text-decoration: none;
+    }
+    .markdown-body a:hover {
+      text-decoration: underline;
+    }
+    .settings-icon {
+      transition: transform 0.3s ease;
+    }
+    .settings-icon.open {
+      transform: rotate(180deg);
+    }
+    .settings-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .settings-content.open {
+      max-height: 200px;
+    }
+
+    /* 通用按钮样式 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      height: 40px;
+      min-width: 120px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background-color: #2563eb;
+      color: white;
+      margin: 0;
+    }
+
+    .btn:hover {
+      background-color: #1d4ed8;
+    }
+
+    .btn:active {
+      background-color: #1e40af;
+    }
+
+    .btn:disabled {
+      background-color: #93c5fd;
+      cursor: not-allowed;
+    }
+
+    /* 移除旧的按钮样式 */
+    #summarize-page,
+    #summarize-selection,
+    #generate-card {
+      width: 100%;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto">
+    <h1 class="text-2xl font-bold mb-4">AI Summary Generator</h1>
+    
+    <!-- API Settings Section -->
+    <div class="mb-4 bg-white rounded-lg shadow">
+      <button id="settings-toggle" class="w-full px-4 py-2 flex items-center justify-between text-left focus:outline-none">
+        <span class="text-gray-700 font-medium">API Settings</span>
+        <svg class="settings-icon w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+      <div class="settings-content px-4">
+        <div class="py-2">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="api-endpoint">
+            API Endpoint
+          </label>
+          <input type="text" id="api-endpoint" 
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Enter your API endpoint">
+        </div>
+        <div class="py-2">
+          <label class="block text-gray-700 text-sm font-bold mb-2" for="api-key">
+            API Key
+          </label>
+          <input type="password" id="api-key" 
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Enter your API key">
+        </div>
+      </div>
+    </div>
+
+    <div class="flex space-x-2 mb-4">
+      <button id="summarize-page" class="btn flex-1">
+        Summarize Page
+      </button>
+      <button id="summarize-selection" class="btn flex-1">
+        Summarize Selection
+      </button>
+    </div>
+
+    <div class="loading" id="loading">
+      <div class="animate-pulse flex space-x-4">
+        <div class="flex-1 space-y-4 py-1">
+          <div class="h-4 bg-gray-300 rounded w-3/4"></div>
+          <div class="space-y-2">
+            <div class="h-4 bg-gray-300 rounded"></div>
+            <div class="h-4 bg-gray-300 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="summary-container" class="bg-white rounded-lg shadow-md hidden">
+      <div id="summary-text" class="markdown-body"></div>
+      <div class="p-4 border-t">
+        <div class="flex items-center space-x-2">
+          <button id="copy-markdown" class="btn flex-1">
+            Copy Markdown
+          </button>
+          <button id="generate-card" class="btn flex-1">
+            Generate Card
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="error-message" class="text-red-500 mt-2 hidden"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
